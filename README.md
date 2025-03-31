@@ -12,6 +12,12 @@ A secure, minimal container runtime that runs containers ephemerally with encryp
 ## Installation
 ```bash
 ./install.sh
+```
 
 ## Usage
+```console
 qtn run <encrypted-image> <command>
+```
+
+## License
+This project is currently unlicensed. A license will be added in the future.
