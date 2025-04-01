@@ -23,12 +23,22 @@ var runCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		fmt.Printf("Running container from %s with command %s\n", args[0], args[1])
-		// Container runtime logic will go here
+	},
+}
+
+var hashCmd = &cobra.Command{
+	Use:    "hash-password [password]",
+	Short:  "Hash a password (internal use)",
+	Args:   cobra.ExactArgs(1),
+	Hidden: true,
+	Run: func(cmd *cobra.Command, args []string) {
+		hash := auth.HashPassword(args[0])
+		os.Stdout.Write(hash) // Output raw bytes instead of hex
 	},
 }
 
 func main() {
-	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(runCmd, hashCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)

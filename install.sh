@@ -1,4 +1,5 @@
 #!/bin/bash
+
 echo "Enter username for qutine installation:"
 read username
 uid=$(id -u "$username")
@@ -9,10 +10,36 @@ fi
 
 echo "Enter password for qutine:"
 read -s password
+echo
 
-go build -o qtn ./cmd/qtn
-mkdir -p "/home/$username/.qutine"
-mv qtn "/home/$username/.local/bin/"
-echo "password:$password" > "/home/$username/.qutine/config" # Placeholder; will hash later
-chown -R "$username:$username" "/home/$username/.qutine"
+user_home="/home/$username"
+bin_dir="$user_home/.local/bin"
+config_dir="$user_home/.qutine"
+
+go build -o qtn ./cmd/qtn || {
+  echo "Failed to build qtn"
+  exit 1
+}
+
+mkdir -p "$bin_dir" "$config_dir" || {
+  echo "Failed to create directories"
+  exit 1
+}
+
+mv qtn "$bin_dir/" || {
+  echo "Failed to move qtn to $bin_dir"
+  exit 1
+}
+
+# Store raw bytes directly
+"$bin_dir/qtn" hash-password "$password" > "$config_dir/config" || {
+  echo "Failed to hash password"
+  exit 1
+}
+
+chown -R "$username:$username" "$bin_dir" "$config_dir" || {
+  echo "Failed to set ownership"
+  exit 1
+}
+
 echo "qutine installed for UID $uid"
