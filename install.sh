@@ -31,12 +31,12 @@ mv qtn "$bin_dir/" || {
   exit 1
 }
 
-# Store raw bytes directly
 "$bin_dir/qtn" hash-password "$password" > "$config_dir/config" || {
   echo "Failed to hash password"
   exit 1
 }
 
+chmod 600 "$config_dir/config" # Owner-only read/write
 chown -R "$username:$username" "$bin_dir" "$config_dir" || {
   echo "Failed to set ownership"
   exit 1

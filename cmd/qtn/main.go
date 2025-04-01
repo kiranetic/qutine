@@ -32,8 +32,8 @@ var hashCmd = &cobra.Command{
 	Args:   cobra.ExactArgs(1),
 	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		hash := auth.HashPassword(args[0])
-		os.Stdout.Write(hash) // Output raw bytes instead of hex
+		salt, hash := auth.GenerateSaltAndHash(args[0])
+		os.Stdout.Write(append(salt, hash...)) // Output salt (16) + hash (32)
 	},
 }
 
