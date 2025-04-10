@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	// "path/filepath"
 
-	"github.com/kiranetic/qutine/internal/auth"
 	"github.com/spf13/cobra"
+	"github.com/kiranetic/qutine/internal/auth"
+	"github.com/kiranetic/qutine/internal/crypto"
+	"golang.org/x/term"
 )
 
 var rootCmd = &cobra.Command{
@@ -37,8 +40,31 @@ var hashCmd = &cobra.Command{
 	},
 }
 
+var encryptCmd = &cobra.Command{
+	Use:   "encrypt <input.tar> <output.qimg>",
+	Short: "Encrypt a container image tarball",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		if !auth.Authenticate() {
+			fmt.Println("Authentication failed")
+			os.Exit(1)
+		}
+
+		fmt.Print("Re-enter password: ")
+		pass, _ := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Println()
+
+		err := crypto.EncryptFile(args[0], args[1], string(pass))
+		if err != nil {
+			fmt.Printf("Encryption failed: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Image encrypted:", args[1])
+	},
+}
+
 func main() {
-	rootCmd.AddCommand(runCmd, hashCmd)
+	rootCmd.AddCommand(runCmd, hashCmd, encryptCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
