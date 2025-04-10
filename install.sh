@@ -12,8 +12,9 @@ echo "Enter password for qutine:"
 read -s password
 echo
 
-user_home="/home/$username"
+user_home=$(getent passwd "$username" | cut -d: -f6)
 bin_dir="$user_home/.local/bin"
+qtn_path="$bin_dir/qtn"
 config_dir="$user_home/.qutine"
 
 go build -o qtn ./cmd/qtn || {
@@ -26,17 +27,17 @@ mkdir -p "$bin_dir" "$config_dir" || {
   exit 1
 }
 
-mv qtn "$bin_dir/" || {
+mv qtn "$qtn_path" || {
   echo "Failed to move qtn to $bin_dir"
   exit 1
 }
 
-"$bin_dir/qtn" hash-password "$password" > "$config_dir/config" || {
+"$qtn_path" hash-password "$password" > "$config_dir/config" || {
   echo "Failed to hash password"
   exit 1
 }
 
-chmod 600 "$config_dir/config" # Owner-only read/write
+chmod 600 "$config_dir/config"
 chown -R "$username:$username" "$bin_dir" "$config_dir" || {
   echo "Failed to set ownership"
   exit 1
