@@ -7,11 +7,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
+
+	"github.com/kiranetic/qutine/internal/crypto"
 )
 
-// RunContainer extracts a tarball into tmpfs and runs a binary
-func RunContainer(imageTarPath, command string) error {
+// RunContainer decrypts or extracts an image and runs the given command
+func RunContainer(imagePath, command, password string) error {
 	tmpMount := filepath.Join("/tmp", fmt.Sprintf("qutine-%d", os.Getpid()))
 
 	if err := os.MkdirAll(tmpMount, 0700); err != nil {
@@ -21,11 +24,22 @@ func RunContainer(imageTarPath, command string) error {
 		return fmt.Errorf("failed to mount tmpfs: %v", err)
 	}
 
+	// Determine whether to decrypt or use as is
+	var tarPath string
+	if strings.HasSuffix(imagePath, ".qimg") {
+		tarPath = filepath.Join(tmpMount, "image.tar")
+		if err := crypto.DecryptFile(imagePath, tarPath, password); err != nil {
+			return fmt.Errorf("decryption failed: %v", err)
+		}
+	} else {
+		tarPath = imagePath
+	}
+
 	rootfs := filepath.Join(tmpMount, "rootfs")
 	if err := os.Mkdir(rootfs, 0755); err != nil {
 		return fmt.Errorf("mkdir rootfs failed: %v", err)
 	}
-	if err := extractTar(imageTarPath, rootfs); err != nil {
+	if err := extractTar(tarPath, rootfs); err != nil {
 		return fmt.Errorf("failed to extract tar: %v", err)
 	}
 

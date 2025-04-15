@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/kiranetic/qutine/internal/auth"
+	"github.com/kiranetic/qutine/internal/container"
 	"github.com/kiranetic/qutine/internal/crypto"
 	"golang.org/x/term"
 )
@@ -18,14 +19,25 @@ var rootCmd = &cobra.Command{
 
 var runCmd = &cobra.Command{
 	Use:   "run [image] [command]",
-	Short: "Run a container from an encrypted image",
+	Short: "Run a container from an encrypted or plain image",
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		if !auth.Authenticate() {
 			fmt.Println("Authentication failed")
 			os.Exit(1)
 		}
-		fmt.Printf("Running container from %s with command %s\n", args[0], args[1])
+
+		fmt.Print("Re-enter password: ")
+		pass, _ := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Println()
+
+		err := container.RunContainer(args[0], args[1], string(pass))
+		if err != nil {
+			fmt.Printf("Run failed: %v\n", err)
+			os.Exit(1)
+		}
+
+		// fmt.Printf("Running container from %s with command %s\n", args[0], args[1])
 	},
 }
 
